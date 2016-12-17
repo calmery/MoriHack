@@ -7,7 +7,8 @@ const debug = console.log
 
 /* *** Socket.io *** */
 
-let room = {}
+let room = {},
+    member = {}
 
 io.sockets.on( 'connection', ( socket ) => {
     
@@ -38,23 +39,22 @@ io.sockets.on( 'connection', ( socket ) => {
     /* *** Room event *** */
 
     socket.on ('createRoom' , function(config){
-
         member[config.roomId] = []
-    
+        debug( 'Room : ' + config.roomId )
     })
 
     socket.on( 'join', ( config ) => {
-        //add
-        room[config.romId] = {
-            roomId: config.roomId,
-            name: config.name
-        }
-        member[config.roomId].push(socket.id)
-        console.log (member)
-        //
-        socket.join( config.roomId )
-        emit( 'joined', { roomId: config.roomId } )
-        debug( 'Joined (' + config.roomId + ') : ' + config.name + '@' + socket.id )
+        if( member[config.roomId] ){
+            room[config.romId] = {
+                roomId: config.roomId,
+                name: config.name
+            }
+            member[config.roomId].push(socket.id)
+            console.log (member)
+            socket.join( config.roomId )
+            emit( 'joined', { roomId: config.roomId } )
+            debug( 'Joined (' + config.roomId + ') : ' + config.name + '@' + socket.id )
+        } else emitError( config.roomId + ' doesn\'t exist' )
     } )
     
     socket.on( 'leave', ( config ) => {
@@ -62,7 +62,9 @@ io.sockets.on( 'connection', ( socket ) => {
             socket.leave( room[socket.id].roomId )
             debug( 'Leaved (' + room[socket.id].roomId + ') : ' + room[socket.id].name + '@' + socket.id )
             delete room[socket.id]
+            member[room[socket.id].roomId].splice( member[room[socket.id].roomId].indexOf( socket.id ), 1 ) 
             emit( 'leaved', {} )
+            if( member[room[socket.id].roomId].length === 0 ) delete member[room[socket.id].roomId]
         } else emitError( 'You haven\'t joined.' )
     } )
     
