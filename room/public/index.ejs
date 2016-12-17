@@ -1,0 +1,15 @@
+<script src="/socket.io/socket.io.js"></script>
+<script src="resources/js/preload.js"></script>
+
+<script>
+    
+    socket.on( 'joined', function(a){
+        console.log(a)
+        console.log('joined')
+    } )
+    
+    socket.on( 'message', function(a){
+        console.log(a)
+    } )
+    
+</script>
