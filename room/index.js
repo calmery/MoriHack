@@ -14,8 +14,8 @@ io.sockets.on( 'connection', ( socket ) => {
     
     /* *** Helper *** */
 
-    const emit = ( key, content ) => {
-        io.sockets.to( socket.id ).emit( key, content )
+    const emit = ( key, content, id ) => {
+        io.sockets.to( id ? id : socket.id ).emit( key, content )
     }
     const emitToRoom = ( roomId, key, content ) => {
         io.to( roomId ).emit( key, content )
@@ -36,21 +36,51 @@ io.sockets.on( 'connection', ( socket ) => {
         }
     } )
     
+    /* *** Call System *** */
+    
+    socket.on( 'callRequest', function( request ){
+        var myRoomId = room[socket.id].roomId
+        
+        var _target, isTarget = false, target
+        for( var i=0; i<member[myRoomId].length; i++ ){
+            _target = room[member[myRoomId][i]]
+            if( request.target === _target.name ){
+                isTarget = true
+                target = member[myRoomId][i]
+                break
+            }
+        }
+        
+        if( isTarget ){
+            emit( 'callRequestToYou', {
+                name: room[socket.id].name,
+                peer: request.peer
+            }, target )
+        }
+    } )
+    
+    socket.on( 'receivedCallRequest', function(){
+        
+    } )
+    
+    socket.on( 'cancelledCallRequest', function(){
+        
+    } )
+    
     /* *** Room event *** */
 
-    socket.on ('createRoom' , function(config){
+    socket.on( 'createRoom' , function( config ){
         member[config.roomId] = []
         debug( 'Room : ' + config.roomId )
-    })
+    } )
 
     socket.on( 'join', ( config ) => {
         if( member[config.roomId] ){
-            room[config.romId] = {
+            room[socket.id] = {
                 roomId: config.roomId,
                 name: config.name
             }
-            member[config.roomId].push(socket.id)
-            console.log (member)
+            member[config.roomId].push( socket.id )
             socket.join( config.roomId )
             emit( 'joined', { roomId: config.roomId } )
             debug( 'Joined (' + config.roomId + ') : ' + config.name + '@' + socket.id )
