@@ -36,12 +36,22 @@ io.sockets.on( 'connection', ( socket ) => {
     } )
     
     /* *** Room event *** */
+
+    socket.on ('createRoom' , function(config){
+
+        member[config.roomId] = []
     
+    })
+
     socket.on( 'join', ( config ) => {
-        room[socket.id] = {
+        //add
+        room[config.romId] = {
             roomId: config.roomId,
             name: config.name
         }
+        member[config.roomId].push(socket.id)
+        console.log (member)
+        //
         socket.join( config.roomId )
         emit( 'joined', { roomId: config.roomId } )
         debug( 'Joined (' + config.roomId + ') : ' + config.name + '@' + socket.id )
