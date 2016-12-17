@@ -1,0 +1,55 @@
+<html>
+
+<head>
+    <style>
+        body, video {
+            padding: 0;
+            margin: 0;
+        }
+        
+        video {
+            float: left
+        }
+    </style>
+    <script>
+        var camera
+        window.onload = function(){
+            MediaStreamTrack.getSources( function( data ){
+                for( var i=0; i<data.length; i++ )
+                    if( data[i].kind === 'video' ) camera = data[i].id
+                initialize( camera )
+            } )
+        }
+
+        function initialize( camera ){
+            var video1 = document.getElementById( 'n1' ),
+                video2 = document.getElementById( 'n2' )
+            
+            navigator.getUserMedia = ( navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia )
+            
+            if( navigator.getUserMedia ){
+                navigator.getUserMedia( {
+                        video: { optional: [{ sourceId: camera }] },
+                        audio: false
+                    }, function( localMediaStream ){
+                        video1.src = window.URL.createObjectURL( localMediaStream )
+                        video2.src = window.URL.createObjectURL( localMediaStream )
+                        video1.style.width = video2.style.width = window.innerWidth / 2
+                        video1.style.height = video2.style.height = window.innerHeight
+                        video1.play()
+                        video2.play()
+                    }, function( error ){
+                        console.log( 'The following error occured: ' + err )
+                    } )
+            } else console.log( 'getUserMedia not supported' )
+            
+        }
+    </script>
+</head>
+
+<body>
+    <video id='n1' autoplay></video>
+    <video id='n2' autoplay></video>
+</body>
+
+</html>
