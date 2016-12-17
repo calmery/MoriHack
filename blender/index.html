@@ -1,0 +1,88 @@
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Blender Three.js エクスポート モーフアニメーション</title>
+    </head>
+    <body>
+
+        <script src="three.min.js"></script>
+        <script src="TrackballControls.js"></script>
+        <script>	
+            //シーンの作成
+            var scene = new THREE.Scene();
+
+            //シーンの大きさ
+            var scene_w  = 600;//横
+            var scene_h = 400;//縦
+
+            //レンダラの初期化
+            var renderer = new THREE.WebGLRenderer({ antialias:true });
+            renderer.setSize( scene_w, scene_h );
+            renderer.setClearColor(0xCCffff, 1);//背景色
+            document.body.appendChild(renderer.domElement);//最後に生成した要素を追加
+
+            //カメラの設定
+            var fov    = 60; //画角
+            var aspect = scene_w / scene_h; //撮影の縦横比
+            var near   = 1; //nearより近い領域は表示されない
+            var far    = 10000; //farより遠い領域は表示されない
+
+            var camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+            camera.position.set( 0, 0, 300 );//カメラ位置
+
+            // ライトを追加
+            var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+            directionalLight.position.set( 0, 150,1000 );
+            scene.add( directionalLight );
+
+            // AmbientLightライトを追加
+            light = new THREE.AmbientLight(0xFFFFFF);
+            scene.add(light);
+
+            trackball = new THREE.TrackballControls( camera );//トラックボール
+
+            // アニメーションの設定
+            var total_frame = 180;//トータルフレーム
+            var last_frame = null;
+            var current_frame = 1;
+
+            //Blenderのオブジェクトを読み込む
+            loader = new THREE.JSONLoader();
+            loader.load( 'bone5.json', function ( geometry, materials ) { //第１引数はジオメトリー、第２引数はマテリアルが自動的に取得）
+
+                //全てのマテリアルのモーフターゲットの値をtrueにする
+                for (var i = 0, l = materials.length; i < l; i++) {
+                    materials[i].morphTargets = true;
+                }
+                //モーフアニメーションメッシュ生成
+                mesh = new THREE.MorphAnimMesh(geometry, new THREE.MeshFaceMaterial(materials));
+
+                mesh.position.set( 0,0,0);
+                mesh.scale.set( 100, 100, 100 );
+                scene.add( mesh );
+
+                //アニメーション
+                ( function renderLoop () {
+                    requestAnimationFrame( renderLoop );
+
+                    //トータルフレームに来たらカレントフレームを0にする
+                    last_frame = current_frame;
+                    current_frame ++;
+                    console.log(total_frame, current_frame)
+                    if (121 <= current_frame) {
+                        current_frame = 0;
+                    }
+                    mesh.morphTargetInfluences[last_frame] = 0;
+                    mesh.morphTargetInfluences[current_frame] = 1;
+
+                    // 表示する
+                    renderer.render( scene, camera );
+                    trackball.update();
+
+                } )();	
+            } );    
+        </script>
+
+    </body>
+</html>

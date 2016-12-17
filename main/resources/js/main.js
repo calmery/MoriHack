@@ -285,6 +285,63 @@ function main( obj ){
         } )
 
     }
+    
+    function createHuman( lat, lng ){
+
+        // 32.215249, 130.753247
+        var now = createCoordinate( lat, lng )
+
+        var x = targetTile.pixelCoordinate.x - now.pixelCoordinate.x
+        var y = targetTile.pixelCoordinate.y - now.pixelCoordinate.y
+
+        /*
+        var loader = new THREE.JSONLoader()
+        loader.load( 'people.json', function ( geometry, materials ){
+            var faceMaterial = new THREE.MeshFaceMaterial( materials )
+            mesh = new THREE.Mesh( geometry, faceMaterial )
+            mesh.position.set( -x, exportTile[displace.y-y][displace.x-x]-125, -y )
+            mesh.rotation.x = Math.PI / 2
+            mesh.scale.set( 1, 1, 1 )
+            scene.add( mesh )
+        } )
+        */
+        
+        var total_frame = 180;//トータルフレーム
+        var last_frame = null;
+        var current_frame = 1;
+        
+        loader = new THREE.JSONLoader();
+        loader.load( 'bone5.json', function ( geometry, materials ) { //第１引数はジオメトリー、第２引数はマテリアルが自動的に取得）
+
+            //全てのマテリアルのモーフターゲットの値をtrueにする
+            for (var i = 0, l = materials.length; i < l; i++) {
+                materials[i].morphTargets = true;
+            }
+            //モーフアニメーションメッシュ生成
+            var mesh = new THREE.MorphAnimMesh(geometry, new THREE.MeshFaceMaterial(materials));
+
+            mesh.position.set( -x, exportTile[displace.y-y][displace.x-x]-125+3, -y )
+            mesh.scale.set( 1, 1, 1 );
+            scene.add( mesh );
+
+            //アニメーション
+            ( function renderLoop(){
+                requestAnimationFrame( renderLoop )
+                
+                last_frame = current_frame
+                current_frame++
+                if (121 <= current_frame) {
+                    current_frame = 0;
+                }
+                
+                mesh.morphTargetInfluences[last_frame] = 0
+                mesh.morphTargetInfluences[current_frame] = 1
+
+                renderer.render( scene, camera )
+            } )()
+        } )
+
+    }
 
     function createCube( lat, lng ){
 
@@ -303,6 +360,9 @@ function main( obj ){
         scene.add( cube )
 
     }
+    
+    window.createHuman = createHuman
+    window.createCube = createCube
     
 }
 
