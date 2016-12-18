@@ -283,6 +283,8 @@ function main( obj ){
             } )
 
         } )
+        
+        createCloud()
 
     }
     
@@ -343,24 +345,45 @@ function main( obj ){
 
     }
     
-    function createCloud(){
-        var total_frame = 250;//トータルフレーム
+    //createEmergency
+    
+    function createEmergency( lat, lng ){
+
+        // 32.215249, 130.753247
+        var now = createCoordinate( lat, lng )
+
+        var x = targetTile.pixelCoordinate.x - now.pixelCoordinate.x
+        var y = targetTile.pixelCoordinate.y - now.pixelCoordinate.y
+
+        /*
+        var loader = new THREE.JSONLoader()
+        loader.load( 'people.json', function ( geometry, materials ){
+            var faceMaterial = new THREE.MeshFaceMaterial( materials )
+            mesh = new THREE.Mesh( geometry, faceMaterial )
+            mesh.position.set( -x, exportTile[displace.y-y][displace.x-x]-125, -y )
+            mesh.rotation.x = Math.PI / 2
+            mesh.scale.set( 1, 1, 1 )
+            scene.add( mesh )
+        } )
+        */
+
+        var total_frame = 180;//トータルフレーム
         var last_frame = null;
         var current_frame = 1;
 
         loader = new THREE.JSONLoader();
-        loader.load( 'cloud4.json', function ( geometry, materials ) { //第１引数はジオメトリー、第２引数はマテリアルが自動的に取得）
+        loader.load( 'bone7.json', function ( geometry, materials ) { //第１引数はジオメトリー、第２引数はマテリアルが自動的に取得）
 
             //全てのマテリアルのモーフターゲットの値をtrueにする
             for (var i = 0, l = materials.length; i < l; i++) {
                 materials[i].morphTargets = true;
             }
             //モーフアニメーションメッシュ生成
-            var cloud4 = new THREE.MorphAnimMesh(geometry, new THREE.MeshFaceMaterial(materials));
+            var mesh = new THREE.MorphAnimMesh(geometry, new THREE.MeshFaceMaterial(materials));
 
-            cloud4.position.set( 0, 150, 0 )
-            cloud4.scale.set( 15, 15, 15 );
-            scene.add( cloud4 );
+            mesh.position.set( -x, exportTile[displace.y-y][displace.x-x]-125+3, -y )
+            mesh.scale.set( 1, 1, 1 );
+            scene.add( mesh );
 
             //アニメーション
             ( function renderLoop(){
@@ -368,17 +391,25 @@ function main( obj ){
 
                 last_frame = current_frame
                 current_frame++
-                if (total_frame <= current_frame) {
+                if (80 <= current_frame) {
                     current_frame = 0;
                 }
 
-                cloud4.morphTargetInfluences[last_frame] = 0
-                cloud4.morphTargetInfluences[current_frame] = 1
+                mesh.morphTargetInfluences[last_frame] = 0
+                mesh.morphTargetInfluences[current_frame] = 1
 
                 renderer.render( scene, camera )
             } )()
         } )
-        
+
+    }
+    
+    function createCloud(){
+        var total_frame = 250;//トータルフレーム
+        var last_frame = null;
+        var current_frame = 1;
+
+        loader = new THREE.JSONLoader();
         loader.load( 'cloud2.json', function ( geometry, materials ) { //第１引数はジオメトリー、第２引数はマテリアルが自動的に取得）
 
             //全てのマテリアルのモーフターゲットの値をtrueにする
@@ -388,7 +419,7 @@ function main( obj ){
             //モーフアニメーションメッシュ生成
             var cloud2 = new THREE.MorphAnimMesh(geometry, new THREE.MeshFaceMaterial(materials));
 
-            cloud2.position.set( 0, 125, 0 )
+            cloud2.position.set( 0, 60, 0 )
             cloud2.scale.set( 15, 15, 15 );
             scene.add( cloud2 );
 
@@ -404,36 +435,6 @@ function main( obj ){
 
                 cloud2.morphTargetInfluences[last_frame] = 0
                 cloud2.morphTargetInfluences[current_frame] = 1
-
-                renderer.render( scene, camera )
-            } )()
-        } )
-        
-        loader.load( 'cloud3.json', function ( geometry, materials ) { //第１引数はジオメトリー、第２引数はマテリアルが自動的に取得）
-
-            //全てのマテリアルのモーフターゲットの値をtrueにする
-            for (var i = 0, l = materials.length; i < l; i++) {
-                materials[i].morphTargets = true;
-            }
-            //モーフアニメーションメッシュ生成
-            var cloud3 = new THREE.MorphAnimMesh(geometry, new THREE.MeshFaceMaterial(materials));
-
-            cloud3.position.set( 0, 100, 0 )
-            cloud3.scale.set( 15, 15, 15 );
-            scene.add( cloud3 );
-
-            //アニメーション
-            ( function renderLoop(){
-                requestAnimationFrame( renderLoop )
-
-                last_frame = current_frame
-                current_frame++
-                if (total_frame <= current_frame) {
-                    current_frame = 0;
-                }
-
-                cloud3.morphTargetInfluences[last_frame] = 0
-                cloud3.morphTargetInfluences[current_frame] = 1
 
                 renderer.render( scene, camera )
             } )()
@@ -461,6 +462,7 @@ function main( obj ){
     
     window.createHuman = createHuman
     window.createCube = createCube
+    window.createEmergency = createEmergency
     window.createCloud = createCloud
     
 }

@@ -13,6 +13,7 @@ peer.on( 'open', function(){
 } )
 
 peer.on( 'call', function( call ){
+    document.getElementById( 'callArea' ).style.display = 'block'
     connectedCall = call
     call.answer( localStream )
     call.on( 'stream', function( stream ){
@@ -37,6 +38,7 @@ onload = function(){
     } )
 
     callStart = function( peerId ){
+        document.getElementById( 'callArea' ).style.display = 'block'
         var peer_id = peerId
         var call = peer.call( peer_id, localStream )
         call.on( 'stream', function( stream ){

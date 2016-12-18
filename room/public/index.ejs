@@ -27,6 +27,7 @@
         text-align: center;
         border-radius: 0 0 0 20px;
         display: none;
+        z-index: 99999999999;
     }
     #callArea a {
         color: white;
@@ -117,7 +118,7 @@
 <section id="main">
 
     <div id="callArea">
-        <a href="javascript: void(0)" id="callEnd">Call End</a>
+        <a href="javascript: void(0)" id="callEnd">Close</a>
     </div>
 
     <div id="roomMember"></div>
@@ -129,6 +130,8 @@
         <div id="chatInputArea">
             <textarea id="chatInput"></textarea>
             <a href="javascript: void(0)" onclick="sendMessage()">Send</a>
+            <a href="javascript: void(0)" onclick="setPin()" id="mylocate">Pin</a>
+            <a href="javascript: void(0)" onclick="emergency()" id="emergency">emergency</a>
         </div>
     </div>
 
@@ -137,14 +140,72 @@
 <script type="text/javascript" src="resources/js/videochat.js"></script>
 <script>
     
+    function setPin(){
+        navigator.geolocation.getCurrentPosition( function( position ){
+
+            var data = position.coords
+
+            var lat = data.latitude,
+                lng = data.longitude
+
+            createHuman( { lat: lat, lng: lng } )
+
+        }, function( error ){
+
+            reject( error )
+
+        }, {
+            enableHighAccuracy: false,
+            timeout           : 8000,
+            maximumAge        : 2000,
+        } )
+        document.getElementById( 'mylocate' ).style.display = 'none'
+    }
+    
+    socket.on( 'emergency', function( position ){
+        console.log( position )
+        createEmergency( position.lat, position.lng )
+    } )
+    
+    function emergency(){
+        navigator.geolocation.getCurrentPosition( function( position ){
+
+            var data = position.coords
+
+            var lat = data.latitude,
+                lng = data.longitude
+
+            socket.emit( 'emergency', {
+                lat: lat,
+                lng: lng
+            } )
+
+        }, function( error ){
+
+            reject( error )
+
+        }, {
+            enableHighAccuracy: false,
+            timeout           : 8000,
+            maximumAge        : 2000,
+        } )
+    }
+    
     var roomMember = document.getElementById( 'roomMember' ),
         messages   = document.getElementById( 'messages' ),
         chatInput  = document.getElementById( 'chatInput' )
     
+    var isMain = false
+    
     socket.on( 'joined', function( members ){
+        socket.emit( 'getWeather', {} )
         roomMember.innerHTML = ''
         console.log( members )
-        main( members.position )
+        if( !isMain ){
+            main( members.position )
+            isMain = true
+        } else createHuman( user.lat, user.lng )
+        memberPosition = members.memberPosition
         members = members.member
         for( var i=0; i<members.length; i++ ){
             roomMember.innerHTML += '<div class="member">'
@@ -152,6 +213,7 @@
             + ' - <a href="javascript: void(0)" onclick="callRequest(\'' + members[i] + '\')">Call</a>'
             + '</div>'
         }
+        user = memberPosition[memberPosition.length-1]
         document.getElementById( 'main' ).style.display = 'block'
     } )
     
@@ -168,7 +230,13 @@
     }
     
     socket.on( 'weather', function( data ){
-        console.log( data )
+        messages.innerHTML += '<div class="message">'
+            + '<div class="messageUserName">System@Weather</div>'
+            + '<div class="content">'
+            + data.weather[0].description + '<br>'
+            + 'Wind : ' + data.wind.speed + '(' + data.wind.deg + 'deg)<br>'
+            + 'Temp : ' + data.main.temp + '<br>Humidity : '+ data.main.humidity
+            + '</div>' 
     } )
     
     socket.on( 'message', function( message ){
@@ -180,7 +248,7 @@
     socket.on( 'callRequest', function( config ){
         if( confirm( 'Receive ?' ) ){
            document.getElementById( 'callArea' ).style.display = 'block'
-            callStart( config.peer )
+           callStart( config.peer )
         } else socket.emit( 'cancelledCallRequest', { target: config.name } )
     } )
     
@@ -255,7 +323,8 @@
                 } )
                 socket.emit( 'join', {
                     name: userName.value,
-                    roomId: inputRoomId.value
+                    roomId: inputRoomId.value,
+                    position: position
                 } )
                 hideCreateAndJoin()
             } )
@@ -264,11 +333,14 @@
     
     joinBtn.addEventListener( 'click', function(){
         if( inputRoomId.value ){
-            socket.emit( 'join', {
-                name: userName.value,
-                roomId: inputRoomId.value
+            getMyLocation.then( function( position ){
+                socket.emit( 'join', {
+                    name: userName.value,
+                    roomId: inputRoomId.value,
+                    position: position
+                } )
+                hideCreateAndJoin()
             } )
-            hideCreateAndJoin()
         }
     } )
     

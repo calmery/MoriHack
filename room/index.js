@@ -11,7 +11,8 @@ const http = require( 'http' )
 
 let room = {},
     member = {},
-    roomInfo = {}
+    roomInfo = {},
+    roomPosition = {}
 
 io.sockets.on( 'connection', ( socket ) => {
     
@@ -38,6 +39,7 @@ io.sockets.on( 'connection', ( socket ) => {
             member[room[socket.id].roomId].splice( member[room[socket.id].roomId].indexOf( socket.id ), 1 ) 
             if( member[room[socket.id].roomId].length === 0 ){
                 delete roomInfo[room[socket.id].roomId]
+                delete roomPosition[room[socket.id].roomId]
             }
             delete room[socket.id]
         }
@@ -68,7 +70,8 @@ io.sockets.on( 'connection', ( socket ) => {
     
     /* *** Weather *** */
     
-    socket.on( 'getWeather', function( position ){
+    socket.on( 'getWeather', function(){
+        var position = roomInfo[room[socket.id].roomId]
         var units = 'metric'
         var APIKEY = "41dd1296e48b5182399bc30c3adecd2f"
         var lat = position.lat
@@ -84,8 +87,7 @@ io.sockets.on( 'connection', ( socket ) => {
             });
             res.on('data', function (chunk) {
                 res = JSON.parse(body);
-                main = res.main;
-                main.weather = res.weather[0].main
+                main = res
                 socket.emit( 'weather', main )
             });
         }).on('error', function (e) {
@@ -137,6 +139,9 @@ io.sockets.on( 'connection', ( socket ) => {
         } else emitError( 'Not found' )
     } )
     
+    socket.on( 'emergency', function( position ){
+        emitToRoom( room[socket.id].roomId, 'emergency', position )
+    } )
     
     
     /* *** Room event *** */
@@ -145,6 +150,7 @@ io.sockets.on( 'connection', ( socket ) => {
         console.log( config )
         if( !member[config.roomId] ){
             member[config.roomId] = []
+            roomPosition[config.roomId] = []
             roomInfo[config.roomId] = {
                 lat: config.position.lat,
                 lng: config.position.lng
@@ -160,13 +166,15 @@ io.sockets.on( 'connection', ( socket ) => {
                 roomId: config.roomId,
                 name: config.name
             }
+            roomPosition[config.roomId].push( config.position )
+            console.log( roomPosition )
             member[config.roomId].push( socket.id )
             socket.join( config.roomId )
             var roomMember = []
             for( var i=0; i<member[config.roomId].length; i++ ){
                 roomMember.push( room[member[config.roomId][i]].name )
             }
-            emitToRoom( config.roomId, 'joined', { roomId: config.roomId, position: roomInfo[config.roomId], member: roomMember } )
+            emitToRoom( config.roomId, 'joined', { roomId: config.roomId, position: roomInfo[config.roomId], member: roomMember, memberPosition: roomPosition[config.roomId] } )
             debug( 'Joined (' + config.roomId + ') : ' + config.name + '@' + socket.id )
         } else emitError( config.roomId + ' doesn\'t exist' )
     } )
