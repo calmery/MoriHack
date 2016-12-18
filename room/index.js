@@ -134,7 +134,11 @@ io.sockets.on( 'connection', ( socket ) => {
             }
             member[config.roomId].push( socket.id )
             socket.join( config.roomId )
-            emit( 'joined', { roomId: config.roomId, position: roomInfo[config.roomId] } )
+            var roomMember = []
+            for( var i=0; i<member[config.roomId].length; i++ ){
+                roomMember.push( room[member[config.roomId][i]].name )
+            }
+            emitToRoom( config.roomId, 'joined', { roomId: config.roomId, position: roomInfo[config.roomId], member: roomMember } )
             debug( 'Joined (' + config.roomId + ') : ' + config.name + '@' + socket.id )
         } else emitError( config.roomId + ' doesn\'t exist' )
     } )

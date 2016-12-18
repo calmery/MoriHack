@@ -3,6 +3,25 @@
 
 <script type="text/javascript" src="https://skyway.io/dist/v2/0.3/peer.js"></script>
 
+<div id="container"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.js"></script>
+<script src="resources/js/three.min.js"></script>
+
+<script src="resources/js/jquery-3.1.1.min.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCvw4kMawbZSiXoHFDiDs2zxBbblWE7_cs"></script>
+<script src="resources/js/location.js"></script>
+<script src="resources/js/tile.js"></script>
+<script src="resources/js/main.js"></script>
+
+<script src="resources/js/7NgOx.js"></script>
+
+
+<div style="display: none">
+    <canvas id="textureBase"></canvas>
+    <canvas id="texture"></canvas>
+</div>
+
 <div id="createAndJoin">
     <textarea id="roomId"></textarea>
     <textarea id="userName"></textarea>
@@ -16,20 +35,53 @@
     <a href="javascript: void(0)" id="callEnd">Call End</a>
 </div>
 
-<div>
-    <video id="peerVideo" style="width: 480px;height: 320px" autoplay></video>
+<div id="roomMember"></div>
+
+<video id="peerVideo" style="width: 480px;height: 320px" autoplay></video>
+
+<div id="chatField">
+    <div id="messages"></div>
+    <div id="chatInputArea">
+        <textarea id="chatInput"></textarea>
+        <a href="javascript: void(0)" onclick="sendMessage()">Send</a>
+    </div>
 </div>
 
 <script type="text/javascript" src="resources/js/videochat.js"></script>
 <script>
     
-    socket.on( 'joined', function(a){
-        console.log(a)
-        console.log('joined')
+    var roomMember = document.getElementById( 'roomMember' ),
+        messages   = document.getElementById( 'messages' ),
+        chatInput  = document.getElementById( 'chatInput' )
+    
+    socket.on( 'joined', function( members ){
+        roomMember.innerHTML = ''
+        main( members.position )
+        members = members.member
+        for( var i=0; i<members.length; i++ ){
+            roomMember.innerHTML += '<div class="member">'
+            + members[i]
+            + '<a href="javascript: void(0)" onclick="callRequest(\'' + members[i] + '\')">Call</a>'
+            + '</div>'
+        }
     } )
     
-    socket.on( 'message', function(a){
-        console.log(a)
+    function callRequest( name ){
+        socket.emit( 'callRequest', {
+            target: name,
+            peer: peer.id
+        } )
+    }
+    
+    function sendMessage(){
+        var mes = chatInput.value
+        socket.emit( 'message', mes )
+    }
+    
+    socket.on( 'message', function( message ){
+        messages.innerHTML += '<div class="message">'
+        + '<div class="messageUserName">' + message.name + '@' + message.from + '</div>'
+        + '<div class="content">' + message.message + '</div>' 
     } )
     
     socket.on( 'callRequest', function( config ){
