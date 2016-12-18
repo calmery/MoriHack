@@ -14,7 +14,10 @@
     <textarea id="targetName"></textarea>
     <a href="javascript: void(0)" id="callRequest">Call Request</a>
     <a href="javascript: void(0)" id="callEnd">Call End</a>
-    <video id="peerVideo" style="width: 320px; height: auto" autoplay></video>
+</div>
+
+<div>
+    <video id="peerVideo" style="width: 480px;height: 320px" autoplay></video>
 </div>
 
 <script type="text/javascript" src="resources/js/videochat.js"></script>
@@ -30,7 +33,7 @@
     } )
     
     socket.on( 'callRequest', function( config ){
-        if( confirm( 'Receive ?' ) ) startCall( config.peer )
+        if( confirm( 'Receive ?' ) ) callStart( config.peer )
         else socket.emit( 'cancelledCallRequest', { target: config.name } )
     } )
     
@@ -131,7 +134,7 @@
                 target: targetName.value,
                 peer: peer.id
             } )
-        }
+        } else console.log( 'targetname is empty' )
     } )
     
     callEndBtn.addEventListener( 'click', function(){

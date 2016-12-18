@@ -13,38 +13,38 @@ peer.on( 'open', function(){
 } )
 
 peer.on( 'call', function( call ){
-    console.log( call )
     connectedCall = call
     call.answer( localStream )
-    console.log( '\n\n\n\n\n\n\n\n\nasdasd\n\n\n\n\n' )
     call.on( 'stream', function( stream ){
         var url = URL.createObjectURL( stream )
         document.getElementById( 'peerVideo' ).src = url
     } )
 } )
 
-navigator.getUserMedia( {
-    audio: true, 
-    video: true
-}, function( stream ){
-    console.log( '\n\n\n\n\n\n\n\n\nasdasdasdasd\n\n\n\n\n' )
-    localStream = stream
-}, function(){ 
-    console.log( 'Error' ) 
-} )
+var callStart, callEnd
+onload = function(){
 
-function startCall( peerId ){
-    
-    var peer_id = peerId
-    var call = peer.call( peer_id, localStream )
-    call.on( 'stream', function( stream ){
-        console.log( '\n\n\n\n\n\n\n\n\nasdasd\n\n\n\n\n' )
-        var url = URL.createObjectURL( stream )
-        document.getElementById( 'peerVideo' ).src = url
+    navigator.getUserMedia( {
+        audio: true, 
+        video: true
+    }, function( stream ){
+        localStream = stream
+        // var url = URL.createObjectURL( stream )
+        // document.getElementById( 'my-video' ).src = url
+    }, function(){ 
+        console.log( 'Error' ) 
     } )
 
-}
+    callStart = function( peerId ){
+        var peer_id = peerId
+        var call = peer.call( peer_id, localStream )
+        call.on( 'stream', function( stream ){
+            var url = URL.createObjectURL( stream )
+            document.getElementById( 'peerVideo' ).src = url
+        } )
+    }
 
-function endCall(){
-    connectedCall.close()
+    callEnd = function(){
+        connectedCall.close()
+    }
 }

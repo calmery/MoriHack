@@ -33,11 +33,11 @@ io.sockets.on( 'connection', ( socket ) => {
         debug( 'Disconnected : ' + socket.id )
         if( room[socket.id] ){
             socket.leave( room[socket.id].roomId )
-            delete room[socket.id]
             member[room[socket.id].roomId].splice( member[room[socket.id].roomId].indexOf( socket.id ), 1 ) 
             if( member[room[socket.id].roomId].length === 0 ){
                 delete roomInfo[room[socket.id].roomId]
             }
+            delete room[socket.id]
         }
     } )
     
