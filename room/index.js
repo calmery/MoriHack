@@ -8,7 +8,8 @@ const debug = console.log
 /* *** Socket.io *** */
 
 let room = {},
-    member = {}
+    member = {},
+    roomInfo = {}
 
 io.sockets.on( 'connection', ( socket ) => {
     
@@ -33,6 +34,10 @@ io.sockets.on( 'connection', ( socket ) => {
         if( room[socket.id] ){
             socket.leave( room[socket.id].roomId )
             delete room[socket.id]
+            member[room[socket.id].roomId].splice( member[room[socket.id].roomId].indexOf( socket.id ), 1 ) 
+            if( member[room[socket.id].roomId].length === 0 ){
+                delete roomInfo[room[socket.id].roomId]
+            }
         }
     } )
     
@@ -109,19 +114,27 @@ io.sockets.on( 'connection', ( socket ) => {
     /* *** Room event *** */
 
     socket.on( 'createRoom' , function( config ){
-        member[config.roomId] = []
-        debug( 'Room : ' + config.roomId )
+        console.log( config )
+        if( !member[config.roomId] ){
+            member[config.roomId] = []
+            roomInfo[config.roomId] = {
+                lat: config.position.lat,
+                lng: config.position.lng
+            }
+            debug( 'Room : ' + config.roomId )
+            debug( 'Position : ' + config.position.lat + ',' + config.position.lng )
+        } else emitError( 'Already exist' )
     } )
 
     socket.on( 'join', ( config ) => {
-        if( member[config.roomId] ){
+        if( member[config.roomId] !== undefined ){
             room[socket.id] = {
                 roomId: config.roomId,
                 name: config.name
             }
             member[config.roomId].push( socket.id )
             socket.join( config.roomId )
-            emit( 'joined', { roomId: config.roomId } )
+            emit( 'joined', { roomId: config.roomId, position: roomInfo[config.roomId] } )
             debug( 'Joined (' + config.roomId + ') : ' + config.name + '@' + socket.id )
         } else emitError( config.roomId + ' doesn\'t exist' )
     } )
@@ -130,10 +143,12 @@ io.sockets.on( 'connection', ( socket ) => {
         if( room[socket.id] ){
             socket.leave( room[socket.id].roomId )
             debug( 'Leaved (' + room[socket.id].roomId + ') : ' + room[socket.id].name + '@' + socket.id )
-            delete room[socket.id]
             member[room[socket.id].roomId].splice( member[room[socket.id].roomId].indexOf( socket.id ), 1 ) 
             emit( 'leaved', {} )
-            if( member[room[socket.id].roomId].length === 0 ) delete member[room[socket.id].roomId]
+            if( member[room[socket.id].roomId].length === 0 ){
+                delete roomInfo[room[socket.id].roomId]
+            }
+            delete room[socket.id]
         } else emitError( 'You haven\'t joined.' )
     } )
     

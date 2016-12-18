@@ -1,6 +1,23 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="resources/js/preload.js"></script>
 
+<script type="text/javascript" src="https://skyway.io/dist/v2/0.3/peer.js"></script>
+
+<div id="createAndJoin">
+    <textarea id="roomId"></textarea>
+    <textarea id="userName"></textarea>
+    <a href="javascript: void(0)" id="createRoomBtn">CreateRoomBtn</a>
+    <a href="javascript: void(0)" id="joinBtn">JoinBtn</a>
+</div>
+
+<div id="callArea">
+    <textarea id="targetName"></textarea>
+    <a href="javascript: void(0)" id="callRequest">Call Request</a>
+    <a href="javascript: void(0)" id="callEnd">Call End</a>
+    <video id="peerVideo" style="width: 320px; height: auto" autoplay></video>
+</div>
+
+<script type="text/javascript" src="resources/js/videochat.js"></script>
 <script>
     
     socket.on( 'joined', function(a){
@@ -12,8 +29,9 @@
         console.log(a)
     } )
     
-    socket.on( 'callRequest', function(e){
-        console.log( e )
+    socket.on( 'callRequest', function( config ){
+        if( confirm( 'Receive ?' ) ) startCall( config.peer )
+        else socket.emit( 'cancelledCallRequest', { target: config.name } )
     } )
     
     socket.on( 'cancelledCallRequest', function( e ){
@@ -24,19 +42,100 @@
         console.log( e )
     } )
     
+    var getMyLocation = new Promise( function( resolve, reject ){
+
+        navigator.geolocation.getCurrentPosition( function( position ){
+
+            var data = position.coords
+
+            var lat = data.latitude,
+                lng = data.longitude
+
+            resolve( { lat: lat, lng: lng } )
+
+        }, function( error ){
+
+            reject( error )
+
+        }, {
+            enableHighAccuracy: false,
+            timeout           : 8000,
+            maximumAge        : 2000,
+        } )
+
+    } )
+    
+    /*
+    socket.emit( 'createRoom', function(){
+        roomId: 'MoriHack'
+    } )
+    socket.emit( 'join', {
+        name: 'MareiKikukawa',
+        roomId: 'MoriHack'
+    } )
+    
+    socket.emit( 'callRequest', {
+        name: 'MareiKikukawa',
+        peer: peer.id
+    } )
+    */
+    
 </script>
 
-<script type="text/javascript" src="https://skyway.io/dist/v2/0.3/peer.js"></script>
-<script type="text/javascript" src="resources/js/videochat.js"></script>
-
-<div id="ids">
-    Me : <span id="myId"></span><br>
-    Peer : <span id="peerId"></span>
-</div>
-<div id="btns">
-    <input type="text" placeholder="PeerID" id="peerIdInput">
-    <button id="callStart">Start Call</button>
-    <button id="callEnd">End Call</button>
-</div>
-
-<video id="peerVideo" style="width: 320px; height: auto" autoplay></video>
+<script>
+    function hideCreateAndJoin(){
+        document.getElementById( 'createAndJoin' ).style.display = 'none'
+    }
+    
+    var inputRoomId   = document.getElementById( 'roomId' ),
+        userName      = document.getElementById( 'userName' ),
+        createRoomBtn = document.getElementById( 'createRoomBtn' ),
+        joinBtn       = document.getElementById( 'joinBtn' )
+    
+    createRoomBtn.addEventListener( 'click', function(){
+        if( inputRoomId.value ){
+            getMyLocation.then( function( position ){
+                socket.emit( 'createRoom', {
+                    roomId: inputRoomId.value,
+                    position: {
+                        lat: position.lat,
+                        lng: position.lng
+                    }
+                } )
+                socket.emit( 'join', {
+                    name: userName.value,
+                    roomId: inputRoomId.value
+                } )
+                hideCreateAndJoin()
+            } )
+        }
+    } )
+    
+    joinBtn.addEventListener( 'click', function(){
+        if( inputRoomId.value ){
+            socket.emit( 'join', {
+                name: userName.value,
+                roomId: inputRoomId.value
+            } )
+            hideCreateAndJoin()
+        }
+    } )
+    
+    var callRequestBtn = document.getElementById( 'callRequest' ),
+        callEndBtn     = document.getElementById( 'callEnd' ),
+        targetName     = document.getElementById( 'targetName' ) 
+    
+    callRequestBtn.addEventListener( 'click', function(){
+        if( targetName.value ){
+            socket.emit( 'callRequest', {
+                target: targetName.value,
+                peer: peer.id
+            } )
+        }
+    } )
+    
+    callEndBtn.addEventListener( 'click', function(){
+        endCall()
+    } )
+    
+</script>

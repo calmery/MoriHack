@@ -9,44 +9,42 @@ var peer = new Peer( {
 } )
 
 peer.on( 'open', function(){
-    document.getElementById( 'myId' ).innerHTML = peer.id
+    console.log( peer.id )
 } )
 
 peer.on( 'call', function( call ){
+    console.log( call )
     connectedCall = call
-    document.getElementById( "peerId" ).innerHTML = call.peer
     call.answer( localStream )
+    console.log( '\n\n\n\n\n\n\n\n\nasdasd\n\n\n\n\n' )
     call.on( 'stream', function( stream ){
         var url = URL.createObjectURL( stream )
         document.getElementById( 'peerVideo' ).src = url
     } )
 } )
 
-onload = function(){
+navigator.getUserMedia( {
+    audio: true, 
+    video: true
+}, function( stream ){
+    console.log( '\n\n\n\n\n\n\n\n\nasdasdasdasd\n\n\n\n\n' )
+    localStream = stream
+}, function(){ 
+    console.log( 'Error' ) 
+} )
+
+function startCall( peerId ){
     
-    navigator.getUserMedia( {
-        audio: true, 
-        video: true
-    }, function( stream ){
-        localStream = stream
-        // var url = URL.createObjectURL( stream )
-        // document.getElementById( 'my-video' ).src = url
-    }, function(){ 
-        console.log( 'Error' ) 
+    var peer_id = peerId
+    var call = peer.call( peer_id, localStream )
+    call.on( 'stream', function( stream ){
+        console.log( '\n\n\n\n\n\n\n\n\nasdasd\n\n\n\n\n' )
+        var url = URL.createObjectURL( stream )
+        document.getElementById( 'peerVideo' ).src = url
     } )
 
-    document.getElementById( 'callStart' ).addEventListener( 'click', function(){
-        var peer_id = document.getElementById( 'peerIdInput' ).value
-        var call = peer.call( peer_id, localStream )
-        call.on( 'stream', function( stream ){
-            document.getElementById( "peerId" ).innerHTML = call.peer
-            var url = URL.createObjectURL( stream )
-            document.getElementById( 'peerVideo' ).src = url
-            document.getElementById( 'peerVideo' ).src = url
-        } )
-    } )
+}
 
-    document.getElementById( 'callEnd' ).addEventListener( 'click', function(){
-        connectedCall.close()
-    } )
+function endCall(){
+    connectedCall.close()
 }
