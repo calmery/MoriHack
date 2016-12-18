@@ -12,8 +12,31 @@
         console.log(a)
     } )
     
-    socket.on( 'callRequestToYou', function(e){
+    socket.on( 'callRequest', function(e){
+        console.log( e )
+    } )
+    
+    socket.on( 'cancelledCallRequest', function( e ){
+        console.log( e )
+    } )
+    
+    socket.on( 'receivedCallRequest', function( e ){
         console.log( e )
     } )
     
 </script>
+
+<script type="text/javascript" src="https://skyway.io/dist/v2/0.3/peer.js"></script>
+<script type="text/javascript" src="resources/js/videochat.js"></script>
+
+<div id="ids">
+    Me : <span id="myId"></span><br>
+    Peer : <span id="peerId"></span>
+</div>
+<div id="btns">
+    <input type="text" placeholder="PeerID" id="peerIdInput">
+    <button id="callStart">Start Call</button>
+    <button id="callEnd">End Call</button>
+</div>
+
+<video id="peerVideo" style="width: 320px; height: auto" autoplay></video>

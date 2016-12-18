@@ -52,20 +52,59 @@ io.sockets.on( 'connection', ( socket ) => {
         }
         
         if( isTarget ){
-            emit( 'callRequestToYou', {
+            emit( 'callRequest', {
                 name: room[socket.id].name,
                 peer: request.peer
             }, target )
+        } else emitError( 'Not found' )
+    } )
+    
+    
+    
+    socket.on( 'receivedCallRequest', function( request ){
+        var myRoomId = room[socket.id].roomId
+        
+        var _target, isTarget = false, target
+        for( var i=0; i<member[myRoomId].length; i++ ){
+            _target = room[member[myRoomId][i]]
+            if( request.target === _target.name ){
+                isTarget = true
+                target = member[myRoomId][i]
+                break
+            }
         }
+        
+        if( isTarget ){
+            emit( 'receivedCallRequest', {
+                name: room[socket.id].name,
+                peer: request.peer
+            }, target )
+        } else emitError( 'Not found' )
     } )
     
-    socket.on( 'receivedCallRequest', function(){
+    
+    
+    socket.on( 'cancelledCallRequest', function( request ){
+        var myRoomId = room[socket.id].roomId
+
+        var _target, isTarget = false, target
+        for( var i=0; i<member[myRoomId].length; i++ ){
+            _target = room[member[myRoomId][i]]
+            if( request.target === _target.name ){
+                isTarget = true
+                target = member[myRoomId][i]
+                break
+            }
+        }
         
+        if( isTarget ){
+            emit( 'cancelledCallRequest', {
+                name: room[socket.id].name
+            }, target )
+        } else emitError( 'Not found' )
     } )
     
-    socket.on( 'cancelledCallRequest', function(){
-        
-    } )
+    
     
     /* *** Room event *** */
 
