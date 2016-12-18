@@ -5,6 +5,8 @@ const socketIo = require( 'socket.io' ),
 
 const debug = console.log
 
+const http = require( 'http' )
+
 /* *** Socket.io *** */
 
 let room = {},
@@ -64,7 +66,33 @@ io.sockets.on( 'connection', ( socket ) => {
         } else emitError( 'Not found' )
     } )
     
+    /* *** Weather *** */
     
+    socket.on( 'getWeather', function( position ){
+        var units = 'metric'
+        var APIKEY = "41dd1296e48b5182399bc30c3adecd2f"
+        var lat = position.lat
+        var lon = position.lng
+        var URL = 'http://api.openweathermap.org/data/2.5/weather?lat=' + lat + '&lon=' + lon + '&appid=' + APIKEY + '&units=' + units
+
+        http.get(URL, function (res) {
+            var body = '';
+            res.setEncoding('utf8');
+
+            res.on('data', function (chunk) {
+                body += chunk;
+            });
+            res.on('data', function (chunk) {
+                res = JSON.parse(body);
+                main = res.main;
+                main.weather = res.weather[0].main
+                socket.emit( 'weather', main )
+            });
+        }).on('error', function (e) {
+            console.log(e.message)
+        })
+
+    } )
     
     socket.on( 'receivedCallRequest', function( request ){
         var myRoomId = room[socket.id].roomId

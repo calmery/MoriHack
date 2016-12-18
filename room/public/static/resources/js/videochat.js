@@ -18,6 +18,7 @@ peer.on( 'call', function( call ){
     call.on( 'stream', function( stream ){
         var url = URL.createObjectURL( stream )
         document.getElementById( 'peerVideo' ).src = url
+        document.getElementById( 'peerVideo' ).style.display = 'block'
     } )
 } )
 
@@ -41,10 +42,13 @@ onload = function(){
         call.on( 'stream', function( stream ){
             var url = URL.createObjectURL( stream )
             document.getElementById( 'peerVideo' ).src = url
+            document.getElementById( 'peerVideo' ).style.display = 'block'
         } )
     }
 
     callEnd = function(){
         connectedCall.close()
+        document.getElementById( 'callArea' ).style.display = 'none'
+        document.getElementById( 'peerVideo' ).style.display = 'none'
     }
 }

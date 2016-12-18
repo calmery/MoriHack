@@ -1,3 +1,88 @@
+<style>
+    
+    body {
+        font-family: sans-serif
+    }
+
+    #container {
+        top:0;
+        left:0;
+        right:0;
+        bottom:0;
+        position:fixed
+    }
+    
+    section#main {
+        display: none;
+    }
+    
+    #callArea { 
+        width:100px;
+        height:50px;
+        background: rgba(0,0,0,.5);
+        top: 0;
+        line-height:36pt;
+        right: 0;
+        position: fixed;
+        text-align: center;
+        border-radius: 0 0 0 20px;
+        display: none;
+    }
+    #callArea a {
+        color: white;
+    }
+    
+    #createAndJoin {
+        top: 0;
+        left: 0;
+        width:100%;
+        height: 100%;
+        position: fixed;
+        z-index: 99999;
+    }
+    
+    #chatInputArea {
+        width:100%;
+        height:40px;
+        padding-top:10px;
+        bottom:0;
+        left:0;
+        right:0;
+        position:fixed;
+        z-index:9999;
+        background: rgba( 255,255,255, .5 )
+    }
+    
+    #messages {
+        bottom: 50px;
+        left:0;
+        position:fixed;
+        background:rgba(255,255,255,.5);
+        font-size: 12px;
+        padding: 10px;
+    }
+    .message {
+        padding-bottom:10px;
+    }
+    
+    #roomMember {
+        top: 0;
+        right: 0;
+        position: fixed;
+        z-index:999999
+    }
+    
+    #peerVideo {
+        top: 50%;
+        left:50%;
+        margin: -160px 0 0 -240px;
+        position:fixed;
+        z-index:999999999;
+        display:none
+    }
+
+</style>
+
 <script src="/socket.io/socket.io.js"></script>
 <script src="resources/js/preload.js"></script>
 
@@ -29,23 +114,25 @@
     <a href="javascript: void(0)" id="joinBtn">JoinBtn</a>
 </div>
 
-<div id="callArea">
-    <textarea id="targetName"></textarea>
-    <a href="javascript: void(0)" id="callRequest">Call Request</a>
-    <a href="javascript: void(0)" id="callEnd">Call End</a>
-</div>
+<section id="main">
 
-<div id="roomMember"></div>
-
-<video id="peerVideo" style="width: 480px;height: 320px" autoplay></video>
-
-<div id="chatField">
-    <div id="messages"></div>
-    <div id="chatInputArea">
-        <textarea id="chatInput"></textarea>
-        <a href="javascript: void(0)" onclick="sendMessage()">Send</a>
+    <div id="callArea">
+        <a href="javascript: void(0)" id="callEnd">Call End</a>
     </div>
-</div>
+
+    <div id="roomMember"></div>
+
+    <video id="peerVideo" style="width: 480px;height: 320px" autoplay></video>
+
+    <div id="chatField">
+        <div id="messages"></div>
+        <div id="chatInputArea">
+            <textarea id="chatInput"></textarea>
+            <a href="javascript: void(0)" onclick="sendMessage()">Send</a>
+        </div>
+    </div>
+
+</section>
 
 <script type="text/javascript" src="resources/js/videochat.js"></script>
 <script>
@@ -56,14 +143,16 @@
     
     socket.on( 'joined', function( members ){
         roomMember.innerHTML = ''
+        console.log( members )
         main( members.position )
         members = members.member
         for( var i=0; i<members.length; i++ ){
             roomMember.innerHTML += '<div class="member">'
             + members[i]
-            + '<a href="javascript: void(0)" onclick="callRequest(\'' + members[i] + '\')">Call</a>'
+            + ' - <a href="javascript: void(0)" onclick="callRequest(\'' + members[i] + '\')">Call</a>'
             + '</div>'
         }
+        document.getElementById( 'main' ).style.display = 'block'
     } )
     
     function callRequest( name ){
@@ -78,6 +167,10 @@
         socket.emit( 'message', mes )
     }
     
+    socket.on( 'weather', function( data ){
+        console.log( data )
+    } )
+    
     socket.on( 'message', function( message ){
         messages.innerHTML += '<div class="message">'
         + '<div class="messageUserName">' + message.name + '@' + message.from + '</div>'
@@ -85,8 +178,10 @@
     } )
     
     socket.on( 'callRequest', function( config ){
-        if( confirm( 'Receive ?' ) ) callStart( config.peer )
-        else socket.emit( 'cancelledCallRequest', { target: config.name } )
+        if( confirm( 'Receive ?' ) ){
+           document.getElementById( 'callArea' ).style.display = 'block'
+            callStart( config.peer )
+        } else socket.emit( 'cancelledCallRequest', { target: config.name } )
     } )
     
     socket.on( 'cancelledCallRequest', function( e ){
@@ -95,6 +190,7 @@
     
     socket.on( 'receivedCallRequest', function( e ){
         console.log( e )
+        document.getElementById( 'callArea' ).style.display = 'block'
     } )
     
     var getMyLocation = new Promise( function( resolve, reject ){
@@ -176,21 +272,10 @@
         }
     } )
     
-    var callRequestBtn = document.getElementById( 'callRequest' ),
-        callEndBtn     = document.getElementById( 'callEnd' ),
-        targetName     = document.getElementById( 'targetName' ) 
-    
-    callRequestBtn.addEventListener( 'click', function(){
-        if( targetName.value ){
-            socket.emit( 'callRequest', {
-                target: targetName.value,
-                peer: peer.id
-            } )
-        } else console.log( 'targetname is empty' )
-    } )
+    var callEndBtn     = document.getElementById( 'callEnd' )
     
     callEndBtn.addEventListener( 'click', function(){
-        endCall()
+        callEnd()
     } )
     
 </script>
