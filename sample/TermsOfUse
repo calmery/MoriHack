@@ -1,0 +1,13 @@
+地理院タイルとOpenStreetMapのデータを使ってthree.jsで立体地図を描画する
+http://qiita.com/i09158knct@github/items/f0f4c82fed8aab004737
+
+.banner {
+background-color: rgba(204, 204, 204, 0.333);
+position: fixed;
+top: 0;
+left: 0
+}
+
+<div class="banner">
+<a href="http://portal.cyberjapan.jp/help/termsofuse.html">国土地理院</a>
+</div>
